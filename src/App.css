@@ -25,9 +25,14 @@
   padding: 0;
 }
 
-body {
-  background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-width: 100vw;
+  background: #f8f9fa;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 /* 全局动画定义 */
@@ -91,14 +96,18 @@ body {
 
 /* 容器样式 */
 .container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 15px 20px;
+  margin: 0;
+  padding: 10px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  width: 100%;
+  min-width: 100vw;
+  padding-left: 0;
+  padding-right: 0;
+  max-width: none;
 }
 
 /* 加载动画类 */
@@ -124,7 +133,7 @@ body {
   justify-content: center;
   margin-bottom: 40px;
   padding: 25px;
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+  background-color: var(--primary-color);
   border-radius: var(--radius-lg);
   color: white;
   box-shadow: var(--shadow-medium);
@@ -160,6 +169,7 @@ body {
   text-shadow: 0 2px 4px rgba(0,0,0,0.2);
   position: relative;
   z-index: 1;
+  color: var(--text-primary);
 }
 
 /* 主内容区域 */
@@ -171,9 +181,75 @@ body {
   border-radius: var(--radius-lg);
   padding: 25px;
   box-shadow: var(--shadow-light);
+  min-height: 80vh;
+  width: 100%;
 }
 
-/* 上传区域样式 */
+/* 移除两列布局相关样式 */
+
+/* 上传按钮包装器 */
+.upload-button-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.upload-button-wrapper .file-name {
+  text-align: center;
+  margin-top: 10px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* 底部按钮区域 */
+.bottom-actions-section {
+  width: 100%;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+/* 底部按钮容器 - 居中显示 */
+.actions-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  background-color: var(--background-light);
+  border: 1px solid var(--border-color);
+  width: 100%;
+  position: relative;
+}
+
+/* 按钮行 */
+.action-buttons-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+/* 添加背景装饰 */
+.actions-container::before {
+  content: '';
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(67, 97, 238, 0.05) 0%, transparent 70%);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  top: 50%;
+  left: 50%;
+  z-index: 0;
+}
+
+/* 文件上传按钮样式 */
 .upload-section {
   text-align: center;
   padding: 25px;
@@ -183,13 +259,11 @@ body {
   transition: all var(--transition-normal);
   position: relative;
   overflow: hidden;
-  backdrop-filter: blur(5px);
 }
 
 .upload-section:hover {
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
-  transform: translateY(-2px);
 }
 
 .upload-section h2 {
@@ -201,47 +275,75 @@ body {
   font-weight: 600;
 }
 
-.file-upload {
+/* 拖拽上传区域 */
+.drag-drop-area {
+  width: 100%;
+  min-height: 120px;
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: var(--background-light);
   position: relative;
-  padding: 25px;
+}
+
+.drag-drop-area:hover,
+.drag-drop-area.dragging {
+  border-color: var(--primary-color);
+  background-color: rgba(74, 108, 247, 0.05);
+  box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.1);
+}
+
+.drag-drop-area.dragging {
+  transform: scale(1.02);
+}
+
+.drag-drop-text {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  text-align: center;
+  margin: 0;
+}
+
+.upload-button {
+  padding: 12px 24px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all var(--transition-normal);
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-light);
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(74, 108, 247, 0.2);
+  margin: 0 auto;
+  min-width: 180px;
+  justify-content: center;
 }
 
-.file-upload:hover {
-  background: linear-gradient(135deg, #ffffff 0%, #e9ecef 100%);
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-medium);
+.upload-button:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(74, 108, 247, 0.3);
 }
 
-.file-upload:active {
-  transform: translateY(-1px);
+.upload-button:active {
+  transform: translateY(0);
 }
 
 .file-input {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
-  z-index: 2;
-}
-
-.upload-text {
-  font-size: 1.2rem;
-  color: var(--text-secondary);
-  margin-bottom: 10px;
-  transition: color var(--transition-fast);
-}
-
-.file-upload:hover .upload-text {
-  color: var(--primary-color);
+  display: none;
 }
 
 .file-name {
@@ -280,7 +382,8 @@ body {
   border-radius: var(--radius-sm);
 }
 
-/* 操作按钮区域 */
+/* 操作按钮区域 - 已废弃，使用底部居中的.actions-container样式 */
+/*
 .actions-section {
   display: flex;
   gap: 12px;
@@ -290,7 +393,6 @@ body {
   position: relative;
 }
 
-/* 添加背景装饰 */
 .actions-section::before {
   content: '';
   position: absolute;
@@ -303,6 +405,7 @@ body {
   left: 50%;
   z-index: 0;
 }
+*/
 
 .action-button {
   position: relative;
@@ -319,7 +422,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-width: 120px;
+  width: 160px; /* 统一按钮宽度 */
   text-transform: uppercase;
   letter-spacing: 0.5px;
   box-shadow: var(--shadow-light);
@@ -351,7 +454,7 @@ body {
 .translate-button {
   background-color: var(--primary-color);
   color: white;
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+  background-color: var(--primary-color);
 }
 
 .translate-button:hover:not(:disabled) {
@@ -363,7 +466,7 @@ body {
 .download-button {
   background-color: var(--success-color);
   color: white;
-  background: linear-gradient(135deg, var(--success-color), var(--success-hover));
+  background-color: var(--success-color);
   position: relative;
   /* 更炫酷的出现动画 */
 }
@@ -412,7 +515,7 @@ body {
   box-shadow: var(--shadow-light);
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #ffffff 0%, var(--background-light) 100%);
+  background-color: #ffffff;
 }
 
 .progress-bar-container {
@@ -428,7 +531,7 @@ body {
 
 .progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+  background-color: var(--primary-color);
   transition: width 0.5s ease;
   position: relative;
   border-radius: 14px;
@@ -495,7 +598,7 @@ body {
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+  background-color: var(--primary-color);
 }
 
 .progress-header {
@@ -545,7 +648,7 @@ body {
 
 .progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+  background-color: var(--primary-color);
   transition: width 0.3s ease;
   position: relative;
 }
@@ -575,6 +678,9 @@ body {
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-light);
+  width: 100%;
+  height: 500px;
+  overflow-y: auto;
 }
 
 .editor-section h2 {
@@ -585,6 +691,8 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+  justify-content: center;
+  text-align: center;
 }
 
 .editor-section h2::before {
@@ -615,7 +723,7 @@ body {
 /* 编辑器区域样式增强 */
 .editor-section {
   position: relative;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .editor-section::before {
@@ -633,7 +741,7 @@ body {
   display: grid;
   grid-template-columns: 80px 150px 150px 1fr;
   padding: 18px 15px;
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+  background-color: var(--primary-color);
   color: white;
   font-weight: 600;
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
@@ -644,13 +752,15 @@ body {
 }
 
 .editor-body {
-  max-height: 550px;
+  flex: 1;
   overflow-y: auto;
   border: 1px solid var(--border-color);
   border-top: none;
   border-radius: 0 0 var(--radius-sm) var(--radius-sm);
   background-color: white;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  min-height: 400px; /* 增加最小高度 */
+  width: 100%;
 }
 
 .subtitle-row {
@@ -782,53 +892,18 @@ body {
   box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
 }
 
-/* 语言选择器样式 */
-.language-section {
-  margin: 10px 0;
-  padding: 12px;
-  background-color: var(--background-light);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-light);
-  display: flex;
-  justify-content: center;
-}
-
-.language-selector {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.language-select {
-  padding: 8px 15px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-color);
-  background-color: white;
-  color: var(--text-primary);
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  min-width: 100px;
-}
-
-.language-select:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
-}
-
-.language-arrow {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: var(--text-secondary);
-}
+/* 已移除语言选择器样式 */
 
 /* 响应式设计 */
+@media (max-width: 1200px) {
+  /* 大屏显示器响应式调整 */
+  .left-column {
+    flex: 0 0 350px;
+  }
+}
+
 @media (max-width: 768px) {
+  /* 平板和手机响应式 */
   .logo-container {
     flex-direction: column;
     text-align: center;
@@ -854,7 +929,18 @@ body {
     gap: 25px;
   }
   
-  .actions-section {
+  /* 两栏布局变为单列 */
+  .two-column-layout {
+    flex-direction: column;
+  }
+  
+  .left-column {
+    flex: 1;
+    width: 100%;
+  }
+  
+  /* 底部按钮容器变为垂直排列 */
+  .actions-container {
     flex-direction: column;
     gap: 15px;
   }
@@ -871,6 +957,10 @@ body {
   
   .file-upload {
     padding: 30px 20px;
+  }
+  
+  .editor-body {
+    min-height: 400px;
   }
   
   .editor-header,
@@ -897,16 +987,5 @@ body {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
-  }
-  
-  .language-selector {
-    flex-direction: column;
-    gap: 10px;
-    padding: 20px 15px;
-    width: 100%;
-  }
-  
-  .language-select {
-    width: 100%;
   }
 }

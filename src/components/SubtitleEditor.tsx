@@ -18,7 +18,7 @@ const SubtitleEditor: React.FC<SubtitleEditorProps> = ({ subtitles, onSubtitleCh
   if (subtitles.length === 0) {
     return (
       <div className="subtitle-editor-empty">
-        请上传文件
+        WAITTING FOR UPLOAD
       </div>
     );
   }
@@ -26,10 +26,10 @@ const SubtitleEditor: React.FC<SubtitleEditorProps> = ({ subtitles, onSubtitleCh
   return (
     <div className="subtitle-editor">
       <div className="editor-header">
-        <div className="header-cell id-column">序号</div>
-        <div className="header-cell time-column">开始时间</div>
-        <div className="header-cell time-column">结束时间</div>
-        <div className="header-cell text-column">字幕内容</div>
+        <div className="header-cell id-column">ID</div>
+        <div className="header-cell time-column">Start Time</div>
+        <div className="header-cell time-column">End Time</div>
+        <div className="header-cell text-column">Subtitle</div>
       </div>
       
       <div className="editor-body">

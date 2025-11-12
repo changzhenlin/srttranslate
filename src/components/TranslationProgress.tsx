@@ -22,15 +22,15 @@ const TranslationProgress: React.FC<TranslationProgressProps> = ({
   return (
     <div className="translation-progress">
       <div className="progress-header">
-        <h3>翻译进度</h3>
+        <h3>Translation Progress</h3>
         {isTranslating && (
-          <span className="status-text">正在翻译...</span>
+          <span className="status-text">Translating...</span>
         )}
         {!isTranslating && completed > 0 && !error && (
-          <span className="status-text success">翻译完成!</span>
+          <span className="status-text success">Translation Complete!</span>
         )}
         {error && (
-          <span className="status-text error">翻译失败: {error}</span>
+          <span className="status-text error">Translation Failed: {error}</span>
         )}
       </div>
       
@@ -42,7 +42,7 @@ const TranslationProgress: React.FC<TranslationProgressProps> = ({
       </div>
       
       <div className="progress-stats">
-        {completed}/{total} 行已翻译
+        {completed}/{total} lines translated
       </div>
     </div>
   );

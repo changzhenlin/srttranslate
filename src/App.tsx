@@ -24,8 +24,9 @@ function App() {
     translationProgress
   } = useTranslation();
   
-  const [sourceLanguage, setSourceLanguage] = useState<string>('ja')
-  const [targetLanguage, setTargetLanguage] = useState<string>('zh')
+  // 固定翻译方向为日语到中文
+  const sourceLanguage = 'ja';
+  const targetLanguage = 'zh';
   // 新增：跟踪是否有翻译历史（即翻译是否完成过）
   const [translationCompleted, setTranslationCompleted] = useState<boolean>(false)
 
@@ -49,7 +50,7 @@ function App() {
   // 处理翻译
   const handleTranslate = async () => {
     if (subtitles.length === 0) {
-      alert('请先上传字幕文件');
+      alert('Please upload a subtitle file first');
       return;
     }
 
@@ -61,7 +62,7 @@ function App() {
       setTranslationCompleted(true);
     } catch (error) {
       console.error('翻译失败:', error);
-      alert('翻译失败，请重试');
+      alert('Translation failed, please try again');
     }
   }
 
@@ -106,7 +107,7 @@ function App() {
   // 下载翻译结果
   const handleDownload = useCallback(() => {
     if (subtitles.length === 0) {
-      alert('没有可下载的字幕')
+      alert('No subtitles to download')
       return
     }
 
@@ -117,98 +118,81 @@ function App() {
       downloadSrtFile(srtContent, filename);
     } catch (err) {
       console.error('下载失败:', err);
-      alert('下载失败');
+      alert('Download failed');
     }
   }, [subtitles, sourceLanguage, targetLanguage]);
 
   return (
     <>
       <div className="container">
-        
+        {/* 主内容区域 - 单栏布局 */}
         <main className="main-content">
-          <section className="upload-section animate-fade-in">
-              <h2>上传文件</h2>
-              <FileUpload onFileUpload={handleFileUpload} />
-              {fileName && (
-                <p className="file-name animate-slide-in">已上传: {fileName}</p>
-              )}
-            </section>
-
-          <section className="language-section">
-            <div className="language-selector">
-              <select
-                value={sourceLanguage}
-                onChange={(e) => setSourceLanguage(e.target.value)}
-                disabled={true} // 始终禁用，因为我们只支持日语到中文的翻译
-                className="language-select"
-              >
-                <option value="ja">日语</option>
-              </select>
-              <span className="language-arrow">→</span>
-              <select
-                value={targetLanguage}
-                onChange={(e) => setTargetLanguage(e.target.value)}
-                disabled={true} // 始终禁用，因为我们只支持日语到中文的翻译
-                className="language-select"
-              >
-                <option value="zh">中文</option>
-              </select>
-            </div>
-          </section>
-          
-          <section className="actions-section">
-            <button
-              className={`action-button translate-button ${isTranslating ? 'button-loading' : ''}`}
-              onClick={handleTranslate}
-              disabled={isTranslating || subtitles.length === 0}
-            >
-              <span className="button-text">{isTranslating ? '翻译中...' : '开始翻译'}</span>
-              {isTranslating && (
-                <span className="loading-spinner">⏳</span>
-              )}
-            </button>
-            {isTranslating && (
-              <button 
-                onClick={handleCancelTranslation}
-                className="action-button cancel-button"
-              >
-                取消翻译
-              </button>
-            )}
-            {/* 只有在翻译完成后才显示下载按钮 */}
-            {translationCompleted && (
-              <button 
-                onClick={handleDownload}
-                disabled={subtitles.length === 0}
-                className="action-button download-button animate-scale-in"
-              >
-                <span className="button-text">下载翻译结果</span>
-                <span>↓</span>
-              </button>
-            )}
-            {/* 刷新按钮 */}
-            <button
-              onClick={handleRefresh}
-              className="action-button refresh-button"
-              title="刷新页面"
-            >
-              <span className="button-text">刷新</span>
-              <span>🔄</span>
-            </button>
-          </section>
-
-            <TranslationProgress 
-              total={translationProgress.total}
-              completed={translationProgress.completed}
-              isTranslating={isTranslating}
-            />
-
-            <section className="editor-section">
-            <h2>字幕编辑</h2>
+          {/* 单一预览区域 */}
+          <section className="editor-section">
+            <h2>PREVIEW</h2>
             <SubtitleEditor 
               subtitles={subtitles}
               onSubtitleChange={handleSubtitleChange}
             />
+          </section>
+          
+          {/* 底部按钮区域 - 居中显示 */}
+          <section className="bottom-actions-section">
+            <div className="actions-container">
+              <TranslationProgress 
+                total={translationProgress.total}
+                completed={translationProgress.completed}
+                isTranslating={isTranslating}
+              />
+              
+              <div className="action-buttons-row">
+                <button
+                  className={`action-button translate-button ${isTranslating ? 'button-loading' : ''}`}
+                  onClick={handleTranslate}
+                  disabled={isTranslating || subtitles.length === 0}
+                >
+                  <span className="button-text">{isTranslating ? 'Translating...' : 'Translate'}</span>
+                  {isTranslating && (
+                    <span className="loading-spinner">⏳</span>
+                  )}
+                </button>
+                {isTranslating && (
+                  <button 
+                    onClick={handleCancelTranslation}
+                    className="action-button cancel-button"
+                  >
+                    Cancel Translation
+                  </button>
+                )}
+                {/* 只有在翻译完成后才显示下载按钮 */}
+                {translationCompleted && (
+                  <button 
+                    onClick={handleDownload}
+                    disabled={subtitles.length === 0}
+                    className="action-button download-button animate-scale-in"
+                  >
+                    <span className="button-text">Download Translation</span>
+                    <span>↓</span>
+                  </button>
+                )}
+                {/* 刷新按钮 */}
+                <button
+                  onClick={handleRefresh}
+                  className="action-button refresh-button"
+                  title="刷新页面"
+                >
+                  <span>RELOAD</span>
+                </button>
+              </div>
+              
+              {/* 上传按钮 - 位于下方居中 */}
+              <div className="upload-wrapper">
+                <FileUpload onFileUpload={handleFileUpload} />
+                {fileName && (
+                  <p className="file-name animate-slide-in">已上传: {fileName}</p>
+                )}
+              </div>
+            </div>
           </section>
         </main>
       </div>
