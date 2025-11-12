@@ -93,7 +93,7 @@ body {
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 30px 20px;
+  padding: 15px 20px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
@@ -166,17 +166,17 @@ body {
 .main-content {
   display: flex;
   flex-direction: column;
-  gap: 35px;
+  gap: 20px;
   background: white;
   border-radius: var(--radius-lg);
-  padding: 40px;
+  padding: 25px;
   box-shadow: var(--shadow-light);
 }
 
 /* 上传区域样式 */
 .upload-section {
   text-align: center;
-  padding: 40px;
+  padding: 25px;
   background-color: var(--background-light);
   border-radius: var(--radius-md);
   border: 2px dashed var(--border-color);
@@ -203,7 +203,7 @@ body {
 
 .file-upload {
   position: relative;
-  padding: 40px;
+  padding: 25px;
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all var(--transition-normal);
@@ -245,12 +245,12 @@ body {
 }
 
 .file-name {
-  margin-top: 20px;
+  margin-top: 12px;
   font-weight: 600;
   color: var(--success-color);
-  font-size: 1.1rem;
+  font-size: 1rem;
   display: inline-block;
-  padding: 8px 16px;
+  padding: 6px 12px;
   background-color: rgba(76, 201, 240, 0.1);
   border-radius: var(--radius-sm);
   border: 1px solid rgba(76, 201, 240, 0.2);
@@ -283,9 +283,9 @@ body {
 /* 操作按钮区域 */
 .actions-section {
   display: flex;
-  gap: 20px;
+  gap: 12px;
   justify-content: center;
-  margin: 30px 0;
+  margin: 15px 0;
   flex-wrap: wrap;
   position: relative;
 }
@@ -306,8 +306,8 @@ body {
 
 .action-button {
   position: relative;
-  padding: 16px 40px;
-  font-size: 1.1rem;
+  padding: 12px 24px;
+  font-size: 1rem;
   font-weight: 600;
   border: none;
   border-radius: var(--radius-md);
@@ -319,14 +319,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-width: 180px;
-  box-shadow: var(--shadow-light);
-  overflow: hidden;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  min-width: 160px;
+  min-width: 120px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   box-shadow: var(--shadow-light);
@@ -487,7 +480,7 @@ body {
 /* 翻译进度条 */
 .translation-progress {
   background-color: var(--background-light);
-  padding: 25px;
+  padding: 18px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-light);
@@ -509,9 +502,9 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .progress-header h3 {
@@ -578,20 +571,20 @@ body {
 /* 字幕编辑器样式 */
 .editor-section {
   background-color: var(--background-light);
-  padding: 25px;
+  padding: 18px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-light);
 }
 
 .editor-section h2 {
-  margin-bottom: 25px;
+  margin-bottom: 15px;
   color: var(--text-primary);
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .editor-section h2::before {
@@ -791,30 +784,35 @@ body {
 
 /* 语言选择器样式 */
 .language-section {
-  display: flex;
-  justify-content: center;
-  margin: 20px 0;
-}
-
-.language-selector {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  padding: 15px 25px;
+  margin: 10px 0;
+  padding: 12px;
   background-color: var(--background-light);
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-light);
+  display: flex;
+  justify-content: center;
+}
+
+.language-selector {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .language-select {
-  padding: 10px 15px;
-  border: 1px solid var(--border-color);
+  padding: 8px 15px;
   border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
   background-color: white;
-  font-size: 1rem;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition: all var(--transition-fast);
+  min-width: 100px;
 }
 
 .language-select:focus {

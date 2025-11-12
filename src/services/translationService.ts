@@ -187,10 +187,25 @@ export class TranslationService {
     );
 
     // 按批次处理未缓存的文本
-    for (let i = 0; i < tasks.length; i += batchSize) {
-      const batch = tasks.slice(i, i + batchSize);
+    // 使用动态批处理大小进行优化
+    for (let i = 0; i < tasks.length; i += dynamicBatchSize) {
+      // 获取当前批次
+      const batch = tasks.slice(i, i + dynamicBatchSize);
       
-      const batchPromises = batch.map(task => 
+      // 计算当前批次的字符总数
+      const batchCharCount = batch.reduce((sum, task) => sum + task.length, 0);
+      
+      // 如果单个批次过大，可以进一步拆分（虽然已经通过dynamicBatchSize控制，但增加额外保障）
+      let effectiveBatchSize = dynamicBatchSize;
+      if (batchCharCount > maxCharsPerBatch) {
+        effectiveBatchSize = Math.floor(dynamicBatchSize * maxCharsPerBatch / batchCharCount);
+        effectiveBatchSize = Math.max(1, effectiveBatchSize); // 确保至少为1
+      }
+      
+      // 按实际有效的批次大小处理
+      const actualBatch = batch.slice(0, effectiveBatchSize);
+      
+      const batchPromises = actualBatch.map(task => 
         this.translate({
           sourceLanguage,
           targetLanguage,
@@ -206,6 +221,12 @@ export class TranslationService {
       batchResults.forEach(result => {
         results[result.index] = result.text;
       });
+      
+      // 确保批处理期间不会超出API限制
+      if (i + effectiveBatchSize < tasks.length) {
+        // 如果不是最后一批，可以添加一个小延迟避免API请求过于密集
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
     }
 
     return results;
@@ -248,10 +269,26 @@ export class TranslationService {
     reject: (error: any) => void;
   }): Promise<void> {
     try {
-      // 添加重试逻辑
+      // 改进的重试逻辑
       let attempts = 0;
-      const maxAttempts = 2;
+      const maxAttempts = 3; // 增加最大尝试次数
       let lastError: any = null;
+      
+      // 智能退避策略
+      const getRetryDelay = (attempt: number): number => {
+        // 基础延迟 + 随机抖动
+        const baseDelay = 300;
+        const maxJitter = 200;
+        // 指数退避，但增长速度适中
+        return Math.min(baseDelay * Math.pow(1.5, attempt), 2000) + Math.random() * maxJitter;
+      };
+      
+      // 记录特定错误类型的计数器
+      const errorCounts = {
+        timeout: 0,
+        rateLimit: 0,
+        serverError: 0
+      };
 
       while (attempts <= maxAttempts) {
         try {
@@ -261,18 +298,48 @@ export class TranslationService {
         } catch (error) {
           lastError = error;
           attempts++;
-            
-            // 减少重试等待时间，加快重试速度
+          
+          // 错误类型分类和处理
+          const typedError = error as Error;
+          if (typedError.message?.includes('timeout')) {
+            errorCounts.timeout++;
+            console.warn(`翻译超时 (${errorCounts.timeout}次)，正在重试...`);
+          } else if (typedError.message?.includes('429') || typedError.message?.includes('rate limit')) {
+            errorCounts.rateLimit++;
+            console.warn(`遇到速率限制 (${errorCounts.rateLimit}次)，增加延迟后重试...`);
+            // 遇到速率限制时增加额外延迟
             if (attempts <= maxAttempts) {
-              await new Promise(resolve => setTimeout(resolve, 300 * attempts));
+              await new Promise(resolve => setTimeout(resolve, 2000 + getRetryDelay(attempts)));
+              continue;
             }
+          } else if (typedError.message?.includes('50')) {
+            errorCounts.serverError++;
+            console.warn(`服务器错误 (${errorCounts.serverError}次)，稍后重试...`);
+          }
+            
+          // 根据错误类型和尝试次数调整重试策略
+          if (attempts <= maxAttempts) {
+            const delay = getRetryDelay(attempts);
+            console.log(`翻译尝试失败 ${attempts}/${maxAttempts}，${delay.toFixed(0)}ms 后重试...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
         }
       }
 
-      // 所有尝试都失败
-      throw lastError || new Error('翻译失败，已达到最大重试次数');
+      // 所有尝试都失败，创建更详细的错误信息
+      const detailedError = new Error(
+        `翻译失败，已达到最大重试次数 (${maxAttempts}次)。` +
+        `\n错误统计：超时 ${errorCounts.timeout}次, 速率限制 ${errorCounts.rateLimit}次, 服务器错误 ${errorCounts.serverError}次` +
+        (lastError ? `\n原始错误: ${lastError.message}` : '')
+      );
+      throw detailedError;
     } catch (error) {
-      console.error('Translation failed:', error);
+      console.error('翻译任务执行失败:', {
+        error: error instanceof Error ? error.message : String(error),
+        source: task.options.sourceLanguage,
+        target: task.options.targetLanguage,
+        textLength: task.options.text.length
+      });
       task.reject(error);
     } finally {
       this.activeTranslations--;
@@ -287,7 +354,7 @@ export class TranslationService {
    */
   /**
    * 使用Google Translate官方API进行翻译
-   * 通过Vite代理解决跨域问题
+   * 通过优化的请求配置提高稳定性和成功率
    * 只支持日语到中文的翻译
    */
   private async translateWithGoogleAPI(options: TranslationOptions): Promise<string> {
@@ -298,54 +365,132 @@ export class TranslationService {
       throw new Error('只支持日语到中文的翻译');
     }
     
-    // 直接调用Google Translate API
+    // 文本预处理：移除多余空格和控制字符
+    const processedText = text.trim().replace(/[\r\n]+/g, ' ');
+    
+    // 限制单个请求的文本长度，避免API拒绝
+    const maxTextLength = 5000;
+    if (processedText.length > maxTextLength) {
+      console.warn(`文本长度 (${processedText.length}) 超过API限制，将被截断`);
+      // 这里可以考虑实现自动分块，但目前简单截断
+      throw new Error(`文本过长，请将其拆分为更短的段落 (当前: ${processedText.length}字符，限制: ${maxTextLength}字符)`);
+    }
+    
+    // 构建优化的API参数
     const params = new URLSearchParams({
       client: 'gtx',
       sl: sourceLanguage,
       tl: targetLanguage,
       dt: 't',
-      q: text
+      q: processedText,
+      ie: 'UTF-8',  // 确保UTF-8编码
+      oe: 'UTF-8'
     });
     
     const requestUrl = `https://translate.googleapis.com/translate_a/single?${params}`;
     
-    // 调整超时时间为更合理的值
+    // 智能超时设置：根据文本长度动态调整
+    const baseTimeout = 5000; // 基础超时时间5秒
+    const charTimeoutFactor = 2; // 每字符额外毫秒
+    const calculatedTimeout = Math.min(baseTimeout + processedText.length * charTimeoutFactor, 15000); // 最大15秒
+    
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8秒超时
+    const timeoutId = setTimeout(() => controller.abort(), calculatedTimeout);
+    
+    // 请求配置优化
+     const requestConfig = {
+       method: 'GET',
+       headers: {
+         'Accept': 'application/json',
+         'Content-Type': 'application/json',
+         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
+         'Cache-Control': 'no-store, max-age=0',
+         'Pragma': 'no-cache',
+         'Accept-Encoding': 'gzip, deflate, br',
+         'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8'
+       },
+       signal: controller.signal,
+       keepalive: true,
+       credentials: 'omit' as RequestCredentials,
+       referrerPolicy: 'no-referrer-when-downgrade' as ReferrerPolicy
+     };
     
     try {
-      // 使用keepalive和no-cache策略优化连接重用和响应速度
-      const response = await fetch(requestUrl, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Cache-Control': 'no-cache'
-        },
-        signal: controller.signal,
-        keepalive: true
-      });
+      console.debug(`发起翻译请求，文本长度: ${processedText.length}字符，超时设置: ${calculatedTimeout}ms`);
+      const response = await fetch(requestUrl, requestConfig);
       
+      // 增强的错误处理
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const status = response.status;
+        let errorMessage: string;
+        
+        switch (status) {
+          case 429:
+            errorMessage = '遇到API速率限制，请稍后再试';
+            break;
+          case 403:
+            errorMessage = 'API访问被拒绝，可能是请求过于频繁';
+            break;
+          case 500:
+          case 502:
+          case 503:
+          case 504:
+            errorMessage = `服务器临时错误 (${status})，请稍后重试`;
+            break;
+          default:
+            errorMessage = `HTTP错误! 状态码: ${status}`;
+        }
+        
+        throw new Error(errorMessage);
       }
       
+      // 增强的响应解析
       const data = await response.json();
       
-      // 解析Google Translate API响应
-      // 正常响应格式应该是一个嵌套数组，翻译结果在[0][0][0]位置
-      if (data && Array.isArray(data) && data.length > 0 && 
-          Array.isArray(data[0]) && data[0].length > 0 && 
-          Array.isArray(data[0][0]) && data[0][0].length > 0) {
-        return data[0][0][0];
+      // 更健壮的响应格式检查和错误处理
+      try {
+        if (!Array.isArray(data) || data.length === 0) {
+          throw new Error('无效的API响应: 响应不是数组');
+        }
+        
+        if (!Array.isArray(data[0]) || data[0].length === 0) {
+          throw new Error('无效的API响应: 翻译结果数组为空');
+        }
+        
+        // 确保翻译文本存在且不为空
+        if (!Array.isArray(data[0][0]) || data[0][0].length === 0 || !data[0][0][0]) {
+          // 对于空结果的容错处理
+          console.warn('API返回空翻译结果，返回原文');
+          return text;
+        }
+        
+        const translatedText = data[0][0][0];
+        
+        // 验证翻译结果的有效性
+        if (typeof translatedText !== 'string' || translatedText.trim() === '') {
+          console.warn('翻译结果无效或为空，返回原文');
+          return text;
+        }
+        
+        console.debug('翻译成功，结果长度:', translatedText.length);
+        return translatedText;
+      } catch (parseError) {
+        console.error('翻译响应解析失败:', parseError, '原始响应:', data);
+        throw new Error(`翻译响应格式错误: ${parseError instanceof Error ? parseError.message : '未知错误'}`);
+      }
+    } catch (error) {
+      // 增强的超时和网络错误处理
+      const typedError = error as Error;
+      
+      if (typedError.name === 'AbortError') {
+        throw new Error(`翻译请求超时 (${calculatedTimeout}ms)`);
       }
       
-      throw new Error('Invalid translation response format');
-    } catch (error) {
-      // 简化错误处理，减少日志开销
-      const typedError = error as Error;
-      if (typedError.name === 'AbortError') {
-        throw new Error('Translation request timed out');
+      // 网络错误处理
+      if (typedError.message?.includes('Failed to fetch') || typedError.message?.includes('NetworkError')) {
+        throw new Error('网络连接错误，请检查您的网络连接');
       }
+      
       throw error;
     } finally {
       clearTimeout(timeoutId);

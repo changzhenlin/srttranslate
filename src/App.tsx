@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react'
-import reactLogo from './assets/react.svg'
 import './App.css'
 import FileUpload from './components/FileUpload'
 import SubtitleEditor from './components/SubtitleEditor'
@@ -71,6 +70,11 @@ function App() {
     cancelTranslation();
   }
 
+  // 刷新页面
+  const handleRefresh = () => {
+    window.location.reload();
+  }
+
   // 翻译统计信息已移除，使用简单的提示
 
   // 组件卸载时取消正在进行的翻译
@@ -120,10 +124,6 @@ function App() {
   return (
     <>
       <div className="container">
-        <header className="logo-container">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-          <h1>翻译工具</h1>
-        </header>
         
         <main className="main-content">
           <section className="upload-section animate-fade-in">
@@ -186,6 +186,15 @@ function App() {
                 <span>↓</span>
               </button>
             )}
+            {/* 刷新按钮 */}
+            <button
+              onClick={handleRefresh}
+              className="action-button refresh-button"
+              title="刷新页面"
+            >
+              <span className="button-text">刷新</span>
+              <span>🔄</span>
+            </button>
           </section>
 
             <TranslationProgress 
